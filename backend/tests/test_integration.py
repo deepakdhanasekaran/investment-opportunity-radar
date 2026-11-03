@@ -131,3 +131,13 @@ def test_notification_content_and_banned_claims(db, settings, tg, watch):
     for must in ("Quality Score", "Opportunity Score", "GREEN - Worth Investigating", "source: fake", "https://dash/company/VOLV-B.ST", "not investment advice"):
         assert must in t
     assert not any(w in t.lower() for w in ("guaranteed", "safe investment", "risk-free", "sure thing"))
+
+
+def test_ntfy_only_delivery_with_token_and_priority(db, settings):
+    s = settings.model_copy(update={"telegram_bot_token": "", "telegram_chat_id": "", "ntfy_url": "https://ntfy.example/radar", "ntfy_token": "tk_x"})
+    with respx.mock() as m:
+        route = m.post("https://ntfy.example/radar").mock(return_value=httpx.Response(200))
+        ok = send_alert(db, s, kind="system", severity="critical", dedupe_key="n1", text="SYSTEM ALERT", now=NOW)
+    req = route.calls.last.request
+    assert ok.status == "sent" and ok.channel == "ntfy"
+    assert req.headers["Priority"] == "5" and req.headers["Authorization"] == "Bearer tk_x" and req.content == b"SYSTEM ALERT"

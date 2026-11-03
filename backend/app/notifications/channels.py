@@ -15,9 +15,12 @@ def send_telegram(token: str, chat_id: str, text: str, client: httpx.Client | No
     r.raise_for_status()
 
 
-def send_ntfy(url: str, text: str, severity: str, client: httpx.Client | None = None) -> None:
+def send_ntfy(url: str, text: str, severity: str, token: str = "", client: httpx.Client | None = None) -> None:
     prio = {"critical": "5", "warning": "4"}.get(severity, "3")
-    r = (client or httpx).post(url, content=text.encode(), headers={"Priority": prio, "Title": "Opportunity Radar"}, timeout=15)
+    headers = {"Priority": prio, "Title": "Opportunity Radar", "Tags": "rotating_light" if severity == "critical" else "chart_with_downwards_trend"}
+    if token:
+        headers["Authorization"] = f"Bearer {token}"
+    r = (client or httpx).post(url, content=text.encode(), headers=headers, timeout=15)
     r.raise_for_status()
 
 
@@ -27,7 +30,7 @@ def deliver(st: Settings, text: str, severity: str, retries: int, sleep=time.sle
     if st.telegram_bot_token and st.telegram_chat_id:
         chans.append(("telegram", lambda: send_telegram(st.telegram_bot_token, st.telegram_chat_id, text, client)))
     if st.ntfy_url:
-        chans.append(("ntfy", lambda: send_ntfy(st.ntfy_url, text, severity, client)))
+        chans.append(("ntfy", lambda: send_ntfy(st.ntfy_url, text, severity, st.ntfy_token, client)))
     if not chans:
         return [], 0, "no notification channel configured"
     ok, attempts, err = [], 0, None

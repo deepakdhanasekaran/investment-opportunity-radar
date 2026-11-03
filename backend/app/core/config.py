@@ -59,7 +59,8 @@ class Settings(BaseSettings):
     dashboard_url: str = "http://localhost:3000"
     telegram_bot_token: str = ""
     telegram_chat_id: str = ""
-    ntfy_url: str = ""  # e.g. https://ntfy.sh/my-topic
+    ntfy_url: str = ""  # topic URL, e.g. https://ntfy.sh/my-private-topic or https://ntfy.example.com/radar
+    ntfy_token: str = ""  # bearer token for access-controlled / self-hosted ntfy (optional)
     news_enabled: bool = True
     sentiment_backend: str = "lexicon"  # lexicon | finbert
     scan: ScanRules = ScanRules()

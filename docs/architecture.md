@@ -9,7 +9,7 @@ One Python package (`backend/app`), one image, two long-running processes (`api`
 | `strategies` | A pullback in quality company, B market overreaction, D technical pullback; C valuation opportunity is evaluated in `research` (needs fundamentals) |
 | `fundamentals`, `valuation`, `risk`, `scoring` | Quality score, valuation vs own history, risk flags, opportunity score, deterministic classification |
 | `news`, `sentiment` | Google News RSS headlines; lexicon or FinBERT |
-| `notifications` | Decision (new/change/invalidated), cooldown, daily cap, retries, delivery log, Telegram/ntfy |
+| `notifications` | Decision (new/change/invalidated), cooldown, daily cap, retries, delivery log, ntfy (primary) / Telegram (optional) |
 | `backtesting` | Historical engine + paper-trading evaluation |
 | `scheduling` | APScheduler (`max_instances=1`, `coalesce`), market-open gate, heartbeat, SIGTERM drain |
 | `api` | FastAPI, bearer auth, rate limit, audit log |

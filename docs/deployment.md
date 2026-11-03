@@ -1,5 +1,5 @@
 # Deployment (Ubuntu + Docker Compose)
-1. Install Docker Engine + compose plugin. `git clone`, `cp .env.example .env`, fill: `POSTGRES_PASSWORD`, `RADAR_API_TOKEN`, Telegram (`@BotFather` → token; message the bot; chat id from `https://api.telegram.org/bot<TOKEN>/getUpdates`).
+1. Install Docker Engine + compose plugin. `git clone`, `cp .env.example .env`, fill: `POSTGRES_PASSWORD`, `RADAR_API_TOKEN`, `RADAR_NTFY_URL` (install the ntfy app, subscribe to your unguessable topic; for a self-hosted/protected server also set `RADAR_NTFY_TOKEN`). Telegram remains an optional extra channel.
 2. `docker compose up -d --build`. The API applies Alembic migrations on start; the scheduler waits for the API health check.
 3. Verify: `docker compose ps` (all healthy), `curl localhost:8000/health`, `docker compose logs -f scheduler`. Scans run only while exchanges are open.
 4. Dashboard: either `docker compose --profile dashboard up -d --build` (127.0.0.1:3000) or deploy `frontend/dashboard` to Vercel with env `RADAR_API_URL`, `RADAR_API_TOKEN`, `DASHBOARD_PASSWORD`, `DASHBOARD_SESSION_SECRET` (`openssl rand -hex 32`). For Vercel to reach the API without opening a port, run `--profile tunnel` with `CLOUDFLARE_TUNNEL_TOKEN` and point `RADAR_API_URL` at the tunnel hostname (protect it with Cloudflare Access).
