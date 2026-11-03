@@ -1,0 +1,11 @@
+@import "tailwindcss";
+:root { --bg:#0f1216; --panel:#171b21; --line:#262c35; --fg:#e6e9ee; --mute:#8b94a3; }
+@media (prefers-color-scheme: light) { :root { --bg:#f6f7f9; --panel:#fff; --line:#e1e4ea; --fg:#16191f; --mute:#5f6b7a; } }
+body { background: var(--bg); color: var(--fg); font-family: ui-sans-serif, system-ui, sans-serif; }
+.panel { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; }
+.mute { color: var(--mute); }
+th, td { padding: .5rem .75rem; text-align: left; white-space: nowrap; }
+tr + tr { border-top: 1px solid var(--line); }
+input, select { background: var(--bg); border: 1px solid var(--line); border-radius: 6px; padding: .4rem .6rem; }
+button { border: 1px solid var(--line); border-radius: 6px; padding: .4rem .8rem; }
+button:hover { background: var(--line); }

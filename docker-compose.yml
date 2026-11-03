@@ -1,0 +1,81 @@
+# Only the API (bound to localhost) and the optional tunnel talk to the outside. Postgres has no published port.
+x-backend: &backend
+  build: ./backend
+  restart: unless-stopped
+  env_file: .env
+  environment:
+    RADAR_DATABASE_URL: postgresql+psycopg://radar:${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}@db:5432/radar
+  depends_on:
+    db: {condition: service_healthy}
+  stop_grace_period: 60s   # let a running scan finish
+  logging: {driver: json-file, options: {max-size: "10m", max-file: "5"}}
+
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: radar
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}
+      POSTGRES_DB: radar
+    volumes: [pgdata:/var/lib/postgresql/data]
+    networks: [internal]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U radar -d radar"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  api:
+    <<: *backend
+    command: ["api"]
+    ports: ["127.0.0.1:8000:8000"]
+    networks: [internal, default]
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://localhost:8000/health', timeout=4).status==200 else 1)"]
+      interval: 30s
+      timeout: 6s
+      retries: 3
+      start_period: 30s
+
+  scheduler:
+    <<: *backend
+    command: ["scheduler"]
+    networks: [internal, default]
+    depends_on:
+      db: {condition: service_healthy}
+      api: {condition: service_healthy}   # api applies migrations first
+    healthcheck:
+      # heartbeat file is rewritten every 30s by the scheduler process
+      test: ["CMD", "python", "-c", "import os,sys,time; sys.exit(0 if time.time()-os.path.getmtime('/tmp/scheduler.heartbeat')<120 else 1)"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 40s
+
+  # Optional: self-hosted dashboard (otherwise deploy frontend/dashboard to Vercel). `docker compose --profile dashboard up -d`
+  dashboard:
+    profiles: [dashboard]
+    build: ./frontend/dashboard
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      RADAR_API_URL: http://api:8000
+    ports: ["127.0.0.1:3000:3000"]
+    depends_on: {api: {condition: service_healthy}}
+
+  # Optional: outbound-only HTTPS tunnel, no inbound port needed. `docker compose --profile tunnel up -d`
+  cloudflared:
+    profiles: [tunnel]
+    image: cloudflare/cloudflared:latest
+    restart: unless-stopped
+    command: tunnel --no-autoupdate run
+    environment:
+      TUNNEL_TOKEN: ${CLOUDFLARE_TUNNEL_TOKEN:-}
+
+volumes:
+  pgdata:
+
+networks:
+  internal:
+    internal: true   # db is reachable only from api/scheduler, never routed outward

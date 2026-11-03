@@ -1,0 +1,30 @@
+symbol,name,sector
+ABB,ABB Ltd,Industrials
+ALFA,Alfa Laval,Industrials
+ASSA-B,Assa Abloy B,Industrials
+AZN,AstraZeneca,Healthcare
+ATCO-A,Atlas Copco A,Industrials
+ATCO-B,Atlas Copco B,Industrials
+BOL,Boliden,Materials
+ELUX-B,Electrolux B,Consumer Cyclical
+EQT,EQT,Financial Services
+ERIC-B,Ericsson B,Technology
+ESSITY-B,Essity B,Consumer Defensive
+EVO,Evolution,Consumer Cyclical
+GETI-B,Getinge B,Healthcare
+HM-B,H&M B,Consumer Cyclical
+HEXA-B,Hexagon B,Technology
+INVE-B,Investor B,Financial Services
+NDA-SE,Nordea Bank,Financial Services
+NIBE-B,NIBE B,Industrials
+SAND,Sandvik,Industrials
+SCA-B,SCA B,Basic Materials
+SEB-A,SEB A,Financial Services
+SHB-A,Handelsbanken A,Financial Services
+SINCH,Sinch,Technology
+SKA-B,Skanska B,Industrials
+SKF-B,SKF B,Industrials
+SWED-A,Swedbank A,Financial Services
+TEL2-B,Tele2 B,Communication Services
+TELIA,Telia,Communication Services
+VOLV-B,Volvo B,Industrials
