@@ -1,4 +1,4 @@
-"""Headline sentiment in [-1, 1]. FinBERT when installed and selected; otherwise a small finance lexicon.
+"""Headline sentiment in [-1, 1]. FinBERT when installed and selected; otherwise a small finance lexicon (English + a few Swedish terms; other headlines score 0.0 = no signal).
 The model name is stored with every score so lexicon and FinBERT results are never confused."""
 import logging
 import re
@@ -6,8 +6,8 @@ from functools import lru_cache
 
 log = logging.getLogger(__name__)
 
-_NEG = r"plunge|slump|miss(?:es|ed)?|warning|cuts?|lowers?|downgrade|probe|lawsuit|fraud|loss|falls?|drops?|recall|weak|decline|layoffs?|bankrupt|default|fine[sd]?"
-_POS = r"beats?|surge|soar|record|upgrade|raises?|strong|growth|profit rises?|wins?|approval|buyback|rises?|jumps?|outperform"
+_NEG = r"plunge|slump|miss(?:es|ed)?|warning|cuts?|lowers?|downgrade|probe|lawsuit|fraud|loss|falls?|drops?|recall|weak|decline|layoffs?|bankrupt|default|fine[sd]?|rasar|faller|föll|sänker|varning|förlust|konkurs|utredning|skandal|nedgradera"
+_POS = r"beats?|surge|soar|record|upgrade|raises?|strong|growth|profit rises?|wins?|approval|buyback|rises?|jumps?|outperform|stiger|steg|rekord|höjer|ökar|uppgradera|stark|vinst"
 
 
 def lexicon_score(text: str) -> float:

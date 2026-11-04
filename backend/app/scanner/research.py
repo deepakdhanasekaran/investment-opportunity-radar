@@ -115,7 +115,7 @@ def research(s: Session, st: Settings, provider: MarketDataProvider, sec: Securi
     if q and q.missing:
         uncertainties.append("Missing quality metrics: " + ", ".join(q.missing))
     if len(headlines) > 0 and model == "lexicon":
-        uncertainties.append("News sentiment uses a simple lexicon, not FinBERT.")
+        uncertainties.append("News sentiment uses a simple lexicon (English + a few Swedish terms), not FinBERT; headlines it does not recognise score 0.0, i.e. no signal.")
 
     m = fund.metrics if fund else {}
     facts = {

@@ -10,6 +10,7 @@ from app.core.config import Settings
 from app.database import health
 from app.database.models import Analysis, PriceObservation, ScannerRun, Security, Signal, WatchlistItem
 from app.market_data.base import MarketDataProvider
+from app.market_data.calendars import session_fraction
 from app.market_data.symbols import MARKETS
 from app.notifications.alerts import alert_for_analysis, system_alert
 from app.scanner.features import compute, session_date
@@ -77,7 +78,7 @@ def run_scan(s: Session, st: Settings, provider: MarketDataProvider, market: str
             stale += 1
             failed += 1
             continue
-        f = compute(b, q, mk["tz"])
+        f = compute(b, q, mk["tz"], session_fraction(market, q.source_ts))
         if f is None:
             failed += 1
             continue

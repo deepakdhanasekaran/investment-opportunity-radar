@@ -87,7 +87,10 @@ def overview(s=Depends(db), _=Depends(auth)):
     return {"markets": runs, "active_opportunities": sum(a.classification == "GREEN" for a in rows), "top": [_row(a) for a in top],
             "alerts": [{"at": a.created_at.isoformat(), "kind": a.kind, "status": a.status, "severity": a.severity, "message": a.message[:200]} for a in alerts],
             "providers": [{"provider": p.provider, "last_success": p.last_success and p.last_success.isoformat(), "last_error": p.last_error,
-                           "consecutive_failures": p.consecutive_failures} for p in prov]}
+                           "consecutive_failures": p.consecutive_failures, "successes": p.successes, "failures": p.failures,
+                           "last_failure": p.last_failure and p.last_failure.isoformat(),
+                           # failing = latest calls failing; degraded = any failure in last 24h; else healthy
+                           "status": "failing" if p.consecutive_failures else "degraded" if p.last_failure and (datetime.now(timezone.utc) - p.last_failure.replace(tzinfo=p.last_failure.tzinfo or timezone.utc)).total_seconds() < 86400 else "healthy"} for p in prov]}
 
 
 @app.get("/api/opportunities")

@@ -20,7 +20,7 @@ export default async function Overview() {
           {!o.top.length && <tr><td className="mute">None right now.</td></tr>}</tbody></table></div></section>
       <section><h2 className="font-semibold mb-2">Data providers</h2>
         <div className="panel overflow-x-auto"><table className="w-full text-sm"><tbody>
-          {o.providers.map((p: any) => <tr key={p.provider}><td>{p.provider}</td><td>{p.consecutive_failures ? <span className="text-red-400">{p.consecutive_failures} consecutive failures</span> : "healthy"}</td><td className="mute">last ok {p.last_success ? new Date(p.last_success).toLocaleString() : "never"}</td><td className="mute">{p.last_error}</td></tr>)}
+          {o.providers.map((p: any) => <tr key={p.provider}><td>{p.provider}</td><td>{p.status === "failing" ? <span className="text-red-400">failing ({p.consecutive_failures} in a row)</span> : p.status === "degraded" ? <span className="text-amber-400">degraded ({p.failures} failed / {p.successes + p.failures} calls)</span> : "healthy"}</td><td className="mute">last ok {p.last_success ? new Date(p.last_success).toLocaleString() : "never"}</td><td className="mute">{p.last_error}</td></tr>)}
           {!o.providers.length && <tr><td className="mute">No provider calls yet.</td></tr>}</tbody></table></div></section>
       <section><h2 className="font-semibold mb-2">Recent alerts</h2>
         <div className="panel overflow-x-auto"><table className="w-full text-sm"><tbody>

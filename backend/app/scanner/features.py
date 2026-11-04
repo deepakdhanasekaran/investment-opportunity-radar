@@ -30,8 +30,12 @@ def _sma(xs: list[float], n: int) -> float | None:
     return sum(xs[-n:]) / n if len(xs) >= n else None
 
 
-def compute(bars: list[Bar], quote: Quote, tz: str) -> Features | None:
-    """Bars may include today's partial bar; it is dropped so prev_close is truly the previous session."""
+MIN_SESSION_FRACTION = 0.15  # before this, partial-day volume is too noisy to compare with a full-day average
+
+
+def compute(bars: list[Bar], quote: Quote, tz: str, session_frac: float | None = None) -> Features | None:
+    """Bars may include today's partial bar; it is dropped so prev_close is truly the previous session.
+    session_frac: share of the session elapsed; volume is pro-rated by it (None = full-day volume, e.g. backtests)."""
     today = session_date(quote.source_ts, tz)
     prior = [b for b in bars if session_date(b.ts, tz) < today]
     if len(prior) < 6:
@@ -41,6 +45,9 @@ def compute(bars: list[Bar], quote: Quote, tz: str) -> Features | None:
     price = quote.price
     vols = [b.volume for b in prior[-20:] if b.volume]
     vol_ratio = (quote.volume / (sum(vols) / len(vols))) if quote.volume and vols else None
+    if vol_ratio is not None and session_frac is not None:
+        # ponytail: linear pro-rating ignores the intraday U-shape of volume; fine for a coarse screen
+        vol_ratio = vol_ratio / session_frac if session_frac >= MIN_SESSION_FRACTION else None
     rets = [closes[i] / closes[i - 1] - 1 for i in range(max(1, len(closes) - 20), len(closes))]
     vol = statistics.stdev(rets) * (252**0.5) * 100 if len(rets) >= 10 else None
     h20 = max(max(closes[-20:]), price)

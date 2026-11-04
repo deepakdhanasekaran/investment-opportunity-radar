@@ -78,7 +78,7 @@ def test_opportunities_and_company_detail(client, settings, db):
         s.add(sec); s.flush(); s.add(WatchlistItem(security_id=sec.id))
         with respx.mock() as m:
             m.post(url__regex=r".*telegram.*").mock(return_value=httpx.Response(200))
-            run_scan(s, settings, FakeProvider({"VOLV-B.ST": (100.0, 95.0), "^OMX": (1000.0, 985.0)}), "SE", datetime.now(timezone.utc).replace(hour=12))
+            run_scan(s, settings, FakeProvider({"VOLV-B.ST": (100.0, 95.0), "^OMX": (1000.0, 985.0)}), "SE", NOW)
     # NOW in fakes is fixed; created_at uses 'now' param => fix up so the 7-day window includes it
     with session_scope() as s:
         for a in s.scalars(select(Analysis)):

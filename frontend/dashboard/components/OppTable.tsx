@@ -13,14 +13,20 @@ export default function OppTable({ rows }: { rows: Row[] }) {
   const [key, setKey] = useState<keyof Row>("opportunity_score");
   const [dir, setDir] = useState(-1);
   const [cls, setCls] = useState("ALL");
-  const sorted = useMemo(() => rows.filter((r) => cls === "ALL" || r.classification === cls).sort((a, b) => {
+  const [ex, setEx] = useState("ALL");
+  const exchanges = useMemo(() => ["ALL", ...Array.from(new Set(rows.map((r) => r.exchange))).sort()], [rows]);
+  const sorted = useMemo(() => rows.filter((r) => (cls === "ALL" || r.classification === cls) && (ex === "ALL" || r.exchange === ex)).sort((a, b) => {
     const x = a[key], y = b[key];
     if (x == null) return 1; if (y == null) return -1;
     return (x > y ? 1 : x < y ? -1 : 0) * dir;
-  }), [rows, key, dir, cls]);
+  }), [rows, key, dir, cls, ex]);
   return (
     <div className="space-y-3">
-      <select value={cls} onChange={(e) => setCls(e.target.value)}>{["ALL", "GREEN", "YELLOW", "RED"].map((c) => <option key={c}>{c}</option>)}</select>
+      <div className="flex gap-4 items-center text-sm">
+        <label className="mute">Class <select value={cls} onChange={(e) => setCls(e.target.value)}>{["ALL", "GREEN", "YELLOW", "RED"].map((c) => <option key={c}>{c}</option>)}</select></label>
+        <label className="mute">Exchange <select value={ex} onChange={(e) => setEx(e.target.value)}>{exchanges.map((c) => <option key={c}>{c}</option>)}</select></label>
+        <span className="mute">{sorted.length} shown</span>
+      </div>
       <div className="panel overflow-x-auto">
         <table className="w-full text-sm">
           <thead><tr>{cols.map(([k, l]) => <th key={k} className="cursor-pointer mute" onClick={() => { setDir(k === key ? -dir : -1); setKey(k); }}>{l}{k === key ? (dir < 0 ? " ▼" : " ▲") : ""}</th>)}</tr></thead>

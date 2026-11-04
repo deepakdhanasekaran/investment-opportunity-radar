@@ -132,3 +132,21 @@ def test_lexicon_sentiment():
     assert lexicon_score("Company issues profit warning, shares plunge") < 0
     assert lexicon_score("Record profit, analysts upgrade") > 0
     assert lexicon_score("Annual meeting scheduled") == 0
+
+
+def test_session_fraction_and_volume_prorating():
+    from app.market_data.calendars import session_fraction
+    open_ = datetime(2026, 11, 4, 8, 0, tzinfo=timezone.utc)  # Stockholm 09:00 CET
+    assert session_fraction("SE", open_) == pytest.approx(0, abs=1e-6)
+    assert 0.4 < session_fraction("SE", datetime(2026, 11, 4, 12, 0, tzinfo=timezone.utc)) < 0.6
+    assert session_fraction("SE", datetime(2026, 11, 4, 20, 0, tzinfo=timezone.utc)) == 1.0
+    assert session_fraction("SE", datetime(2026, 11, 7, 12, 0, tzinfo=timezone.utc)) is None  # Saturday
+    q = Quote("X", 100, "SEK", NOW, NOW, "fake", 5_000_000)
+    bars = make_bars(100)
+    full = compute(bars, q, "Europe/Stockholm").volume_ratio
+    assert compute(bars, q, "Europe/Stockholm", 0.5).volume_ratio == pytest.approx(full * 2)
+    assert compute(bars, q, "Europe/Stockholm", 0.05).volume_ratio is None  # too early to trust
+
+
+def test_lexicon_handles_swedish():
+    assert lexicon_score("Börsen föll tungt") < 0 < lexicon_score("H&M stiger efter rekord")
