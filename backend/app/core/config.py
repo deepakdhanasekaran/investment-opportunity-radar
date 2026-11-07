@@ -56,7 +56,7 @@ class Settings(BaseSettings):
     log_level: str = "INFO"
     api_token: str = Field(default="", description="Bearer token for the API; empty => API refuses to start serving data")
     cors_origins: list[str] = []
-    dashboard_url: str = "http://localhost:3000"
+    dashboard_url: str = "http://localhost:4000"
     telegram_bot_token: str = ""
     telegram_chat_id: str = ""
     ntfy_url: str = ""  # topic URL, e.g. https://ntfy.sh/my-private-topic or https://ntfy.example.com/radar

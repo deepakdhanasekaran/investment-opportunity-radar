@@ -100,9 +100,17 @@ class YahooProvider:
         if m.get("debt_to_equity") is not None:
             m["debt_to_equity"] = m["debt_to_equity"] / 100
         m.update(self._statement_metrics(t))
-        return Fundamentals(annual_eps=self._annual_eps(t), symbol=symbol, source=self.name, retrieved_ts=datetime.now(timezone.utc),
+        return Fundamentals(annual_eps=self._annual_eps(t), next_earnings=self._next_earnings(t), symbol=symbol, source=self.name, retrieved_ts=datetime.now(timezone.utc),
                             sector=info.get("sector"), industry=info.get("industry"),
                             currency=info.get("financialCurrency") or info.get("currency"), metrics=m)
+
+    @staticmethod
+    def _next_earnings(t: yf.Ticker):
+        try:
+            ds = [d for d in (t.calendar or {}).get("Earnings Date", []) if hasattr(d, "year")]
+            return min(ds) if ds else None  # Yahoo's calendar is unverified for Swedish listings
+        except Exception:
+            return None
 
     @staticmethod
     def _annual_eps(t: yf.Ticker) -> list[tuple[str, float]]:

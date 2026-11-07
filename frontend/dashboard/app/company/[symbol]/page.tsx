@@ -36,6 +36,11 @@ export default async function Company({ params }: { params: Promise<{ symbol: st
           <div className="panel p-4"><h2 className="font-semibold mb-2">Financial metrics (Yahoo)</h2><J o={fx.fundamentals} cur={fx.currency} /></div>
           <div className="panel p-4"><h2 className="font-semibold mb-2">Valuation & technicals</h2><J o={{ ...fx.valuation, sma50: fx.sma50, sma200: fx.sma200, drawdown_20d_pct: fx.drawdown_20d_pct, volatility_ann_pct: fx.volatility_ann_pct, volume_ratio: fx.volume_ratio }} /></div>
         </div>
+        {fx.levels && <div className="panel p-4"><h2 className="font-semibold mb-1">Reference levels <span className="mute text-xs font-normal">· not targets, not a recommendation: computed from price history only</span></h2>
+          <div className="grid md:grid-cols-2 gap-4 text-sm">
+            <div><h3 className="mute mb-1">Above current price</h3>{fx.levels.upside.map((l: any) => <div key={l.label} className="flex justify-between"><span>{l.label}</span><span>{Number(l.price).toFixed(2)} {fx.currency} ({pct((l.price / fx.price - 1) * 100)})</span></div>)}{!fx.levels.upside.length && <div className="mute">None</div>}</div>
+            <div><h3 className="mute mb-1">Below current price</h3>{fx.levels.downside.map((l: any) => <div key={l.label} className="flex justify-between"><span>{l.label}</span><span>{Number(l.price).toFixed(2)} {fx.currency} ({pct((l.price / fx.price - 1) * 100)})</span></div>)}{!fx.levels.downside.length && <div className="mute">None</div>}</div>
+          </div>{fx.next_earnings && <p className="text-xs mute mt-2">Next earnings (Yahoo calendar): {fx.next_earnings}</p>}</div>}
         <div className="panel p-4"><h2 className="font-semibold mb-2">News (headline sentiment: {c.news[0]?.model ?? "n/a"})</h2><ul className="text-sm space-y-1">{c.news.map((n: any, i: number) => <li key={i}><a className="underline" href={n.url} target="_blank" rel="noreferrer noopener">{n.title}</a> <span className="mute">{n.publisher} · {num(n.sentiment, 2)}</span></li>)}{!c.news.length && <li className="mute">No articles stored.</li>}</ul></div>
       </>}
       <div className="panel p-4 overflow-x-auto"><h2 className="font-semibold mb-2">Historical signals</h2><table className="text-sm w-full"><tbody>

@@ -150,3 +150,13 @@ def test_session_fraction_and_volume_prorating():
 
 def test_lexicon_handles_swedish():
     assert lexicon_score("Börsen föll tungt") < 0 < lexicon_score("H&M stiger efter rekord")
+
+
+def test_earnings_and_history_flags_and_levels():
+    from app.scanner.features import reference_levels
+    f = Fundamentals("X", "fake", NOW, sector="Energy", metrics=dict(GOOD))
+    codes = {x.code: x.severity for x in evaluate(f, 40, [], 30, -2, False, False, 1.0, days_to_earnings=1, pe_vs_hist=1.96)}
+    assert codes["earnings_imminent"] == "REVIEW" and codes["expensive_vs_own_history"] == "REVIEW" and codes["cyclical_sector"] == "INFO"
+    assert not {x.code for x in evaluate(f, 40, [], 30, -2, False, False, 1.0, days_to_earnings=9, pe_vs_hist=1.0)} & {"earnings_imminent", "expensive_vs_own_history"}
+    lv = reference_levels(compute(make_bars(100), Quote("X", 90, "USD", NOW, NOW, "fake", 1), "Europe/Stockholm"))
+    assert all(x["price"] > 90 for x in lv["upside"]) and all(x["price"] < 90 for x in lv["downside"]) and lv["downside"]

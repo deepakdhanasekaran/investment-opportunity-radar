@@ -1,6 +1,6 @@
 """Provider-neutral market data types and interface. Every quote carries source + timestamps."""
 from dataclasses import dataclass, field
-from datetime import datetime
+from datetime import date, datetime
 from typing import Protocol
 
 
@@ -44,6 +44,7 @@ class Fundamentals:
     metrics: dict[str, float | None] = field(default_factory=dict)
     raw_ts: datetime | None = None  # period end of the underlying statements, if known
     annual_eps: list[tuple[str, float]] = field(default_factory=list)  # (fiscal period end ISO date, diluted EPS)
+    next_earnings: date | None = None  # next scheduled report per Yahoo calendar; None = unknown (not "none scheduled")
 
 
 class MarketDataProvider(Protocol):

@@ -16,7 +16,7 @@ Yahoo (yfinance) ─► scheduler (every 15 min, only while exchange open) ─�
 cp .env.example .env      # set POSTGRES_PASSWORD, RADAR_API_TOKEN (openssl rand -hex 32), RADAR_NTFY_URL
 docker compose up -d --build            # db + api (runs migrations) + scheduler
 curl localhost:8000/health
-docker compose --profile dashboard up -d --build   # optional dashboard on 127.0.0.1:3000
+docker compose --profile dashboard up -d --build   # optional dashboard on 127.0.0.1:4000
 ```
 Details: [docs/deployment.md](docs/deployment.md). Tests: `cd backend && pip install -e '.[dev]' && pytest`.
 

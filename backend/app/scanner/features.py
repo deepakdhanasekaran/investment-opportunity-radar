@@ -20,6 +20,7 @@ class Features:
     drawdown_20d_pct: float | None
     volatility_ann_pct: float | None
     n_bars: int
+    low_20d: float | None = None
 
 
 def session_date(ts: datetime, tz: str) -> date:
@@ -56,4 +57,15 @@ def compute(bars: list[Bar], quote: Quote, tz: str, session_frac: float | None =
         five_day_change_pct=(price / closes[-5] - 1) * 100 if len(closes) >= 5 else None,
         volume_ratio=vol_ratio, sma50=_sma(closes, 50), sma200=_sma(closes, 200),
         high_20d=h20, drawdown_20d_pct=(price / h20 - 1) * 100, volatility_ann_pct=vol, n_bars=len(closes),
+        low_20d=min(min(closes[-20:]), price),
     )
+
+
+def reference_levels(f: Features) -> dict:
+    """Informational price references from data we already hold. NOT targets or advice."""
+    up = [("SMA50", f.sma50), ("20-day high", f.high_20d)]
+    down = [("20-day low (close)", f.low_20d)]
+    if f.volatility_ann_pct:  # 2 standard deviations of a 5-day move at current volatility
+        down.append(("2σ 5-day move (volatility)", f.price * (1 - 2 * f.volatility_ann_pct / 100 / 252**0.5 * 5**0.5)))
+    return {"upside": [{"label": k, "price": v} for k, v in up if v and v > f.price],
+            "downside": [{"label": k, "price": v} for k, v in down if v and 0 < v < f.price]}

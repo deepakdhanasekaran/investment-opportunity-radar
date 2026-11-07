@@ -12,7 +12,7 @@ from app.fundamentals.quality import QualityResult, score_quality
 from app.market_data.base import Fundamentals, MarketDataProvider, Quote
 from app.news.fetch import fetch_news
 from app.risk.rules import evaluate, risk_level
-from app.scanner.features import Features
+from app.scanner.features import Features, reference_levels
 from app.scoring.classify import classify
 from app.scoring.opportunity import score_opportunity
 from app.sentiment.analyzer import score_titles
@@ -104,7 +104,9 @@ def research(s: Session, st: Settings, provider: MarketDataProvider, sec: Securi
     ex_div = any(a["dividend"] and a["date"] >= (now - timedelta(days=2)).date().isoformat() for a in actions)
 
     flags = evaluate(fund, quote.price, headlines, feats.volatility_ann_pct, feats.daily_change_pct, recent_split, ex_div,
-                     q.confidence if q else 0.0)
+                     q.confidence if q else 0.0,
+                     days_to_earnings=(fund.next_earnings - now.date()).days if fund and fund.next_earnings else None,
+                     pe_vs_hist=val.pe_vs_hist if val else None)
     neg = [x.text.split(": ", 1)[-1] for x in flags if x.code.startswith("negative_news")]
     fwd = fund.metrics.get("forward_pe") if fund else None
     fwd_ratio = fwd / val.pe if (fwd and val and val.pe) else None
@@ -112,6 +114,8 @@ def research(s: Session, st: Settings, provider: MarketDataProvider, sec: Securi
     verdict = classify(q, opp, flags, st.cls)
     if not arts and st.news_enabled:
         uncertainties.append("No news retrieved: cause of decline cannot be verified.")
+    if fund and fund.next_earnings is None:
+        uncertainties.append("Next earnings date unavailable: an imminent report cannot be ruled out.")
     if q and q.missing:
         uncertainties.append("Missing quality metrics: " + ", ".join(q.missing))
     if len(headlines) > 0 and model == "lexicon":
@@ -128,6 +132,7 @@ def research(s: Session, st: Settings, provider: MarketDataProvider, sec: Securi
         "fundamentals": {k: m.get(k) for k in ("revenue_growth", "earnings_growth", "profit_margin", "operating_margin", "debt_to_equity",
                                                "roe", "roic", "pe", "forward_pe", "pb", "ev_ebitda", "current_ratio", "free_cash_flow")},
         "valuation": {"pe": val.pe, "hist_pe_median": val.hist_pe_median, "pe_vs_hist": val.pe_vs_hist} if val else None,
+        "levels": reference_levels(feats), "next_earnings": fund.next_earnings.isoformat() if fund and fund.next_earnings else None,
         "providers": sorted(providers), "strategies": [{"name": h.strategy, "reasons": h.reasons} for h in hits],
     }
     val_text = "Valuation data unavailable."

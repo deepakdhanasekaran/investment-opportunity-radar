@@ -18,7 +18,8 @@ class Flag:
 
 
 def evaluate(f: Fundamentals | None, price: float, headlines: list[str], vol_ann_pct: float | None,
-             daily_change_pct: float, recent_splits: bool, ex_div_recent: bool, quality_conf: float, min_daily_value: float = 5e6) -> list[Flag]:
+             daily_change_pct: float, recent_splits: bool, ex_div_recent: bool, quality_conf: float, min_daily_value: float = 5e6,
+             days_to_earnings: int | None = None, pe_vs_hist: float | None = None) -> list[Flag]:
     out: list[Flag] = []
     if f is None:
         out.append(Flag("fundamentals_missing", "REVIEW", "Fundamentals unavailable: analysis incomplete"))
@@ -49,6 +50,12 @@ def evaluate(f: Fundamentals | None, price: float, headlines: list[str], vol_ann
         pe = m.get("pe")
         if pe is not None and pe > 60:
             out.append(Flag("extreme_valuation", "REVIEW", f"P/E {pe:.0f}"))
+        if f.sector in ("Energy", "Basic Materials"):
+            out.append(Flag("cyclical_sector", "INFO", f"{f.sector}: earnings follow commodity prices, so P/E and own-history comparisons are unreliable"))
+        if pe_vs_hist is not None and pe_vs_hist >= 1.5:
+            out.append(Flag("expensive_vs_own_history", "REVIEW", f"P/E is {pe_vs_hist:.0%} of its own median: cheap only on absolute multiples"))
+    if days_to_earnings is not None and 0 <= days_to_earnings <= 3:
+        out.append(Flag("earnings_imminent", "REVIEW", "Earnings report today" if days_to_earnings == 0 else f"Earnings report in {days_to_earnings} day(s): event risk"))
     if vol_ann_pct is not None and vol_ann_pct > 60:
         out.append(Flag("unusual_volatility", "REVIEW", f"20-day annualised volatility {vol_ann_pct:.0f}%"))
     if daily_change_pct <= -40:
