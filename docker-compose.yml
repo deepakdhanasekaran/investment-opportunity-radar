@@ -61,7 +61,10 @@ services:
     env_file: .env
     environment:
       RADAR_API_URL: http://api:8000
-    ports: ["127.0.0.1:4000:3000"]
+      # true = Secure session cookie (needs HTTPS or localhost). Set false only for plain-HTTP LAN access.
+      DASHBOARD_COOKIE_SECURE: ${DASHBOARD_COOKIE_SECURE:-true}
+    # Localhost only. Remote access: `tailscale serve --bg 4000` on the host (see docs/deployment.md). DASHBOARD_BIND=0.0.0.0 opens it to the LAN.
+    ports: ["${DASHBOARD_BIND:-127.0.0.1}:4000:3000"]
     depends_on: {api: {condition: service_healthy}}
 
   # Optional: outbound-only HTTPS tunnel, no inbound port needed. `docker compose --profile tunnel up -d`

@@ -17,7 +17,7 @@ async function login(form: FormData) {
     redirect("/login?e=bad");
   }
   fails.delete("g");
-  (await cookies()).set(COOKIE, await makeToken(secret!), { httpOnly: true, secure: process.env.NODE_ENV === "production", sameSite: "strict", path: "/", maxAge: 43200 });
+  (await cookies()).set(COOKIE, await makeToken(secret!), { httpOnly: true, secure: process.env.DASHBOARD_COOKIE_SECURE !== "false", sameSite: "strict", path: "/", maxAge: 43200 });
   redirect("/");
 }
 
