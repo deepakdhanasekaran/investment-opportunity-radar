@@ -13,12 +13,12 @@ from app.universe.loader import universe
 
 def main() -> None:
     ap = argparse.ArgumentParser()
-    ap.add_argument("market", choices=["SE", "US"])
+    ap.add_argument("market", choices=list(MARKETS))
     ap.add_argument("--limit", type=int, default=60)
     ap.add_argument("--cost-bps", type=float, default=10.0)
     a = ap.parse_args()
     st, mk, p = get_settings(), MARKETS[a.market], YahooProvider()
-    names = st.scan.se_universe if a.market == "SE" else st.scan.us_universe
+    names = getattr(st.scan, f"{a.market.lower()}_universe")
     syms = [m.symbol for m in universe(a.market, names)][: a.limit]
     bars = p.histories(syms + [mk["index"]], 1900)
     idx = bars.pop(mk["index"])

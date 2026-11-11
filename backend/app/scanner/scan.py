@@ -43,7 +43,7 @@ def run_scan(s: Session, st: Settings, provider: MarketDataProvider, market: str
     s.add(run)
     s.flush()
     wl = [(w.security.symbol, w.security.market) for w in s.scalars(select(WatchlistItem)).all()]
-    names = st.scan.se_universe if market == "SE" else st.scan.us_universe
+    names = getattr(st.scan, f"{market.lower()}_universe")
     members = universe(market, names, wl)
     by_sym = {m.symbol: m for m in members}
     syms = list(by_sym)

@@ -14,7 +14,7 @@ class Member:
 
 
 _FILES = {"sp500": ("US", "us_sp500.csv"), "nasdaq100": ("US", "us_nasdaq100.csv"),
-          "omxs30": ("SE", "se_omxs30.csv"), "largecap": ("SE", "se_largecap.csv")}
+          "omxs30": ("SE", "se_omxs30.csv"), "largecap": ("SE", "se_largecap.csv"), "nifty100": ("IN", "in_nifty100.csv")}
 
 
 def load(name: str) -> list[Member]:

@@ -57,7 +57,7 @@ def build() -> BlockingScheduler:
     for mk in st.scan.markets:
         # offset SE/US a little so the two never start in the same second
         sch.add_job(scan_job, "interval", minutes=st.scan.interval_minutes, args=[mk], id=f"scan-{mk}", next_run_time=datetime.now(timezone.utc))
-    sch.add_job(paper_job, "cron", hour=22, minute=30, id="paper-eval")  # after both markets have closed
+    sch.add_job(paper_job, "cron", minute=35, id="paper-eval")  # hourly so a new GREEN shows as an open position within the hour
     sch.add_job(heartbeat, "interval", seconds=30, id="heartbeat", next_run_time=datetime.now(timezone.utc))
     return sch
 

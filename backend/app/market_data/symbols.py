@@ -18,10 +18,17 @@ def to_yahoo(symbol: str, market: str) -> str:
         if not re.fullmatch(r"[A-Z0-9]{1,6}(-[A-Z])?", s):
             raise ValueError(f"invalid US ticker: {symbol!r}")
         return s
+    if market == "IN":
+        s = s.removesuffix(".NS").replace(" ", "")
+        if not re.fullmatch(r"[A-Z0-9&-]{1,20}", s):
+            raise ValueError(f"invalid Indian ticker: {symbol!r}")
+        return f"{s}.NS"
     raise ValueError(f"unknown market {market!r}")
 
 
 MARKETS = {
     "SE": {"exchange": "Nasdaq Stockholm", "mic": "XSTO", "currency": "SEK", "tz": "Europe/Stockholm", "index": "^OMX"},
     "US": {"exchange": "NYSE/Nasdaq", "mic": "XNYS", "currency": "USD", "tz": "America/New_York", "index": "^GSPC"},
+    # exchange_calendars has no NSE calendar; XBOM (BSE) has identical hours (09:15-15:30 IST) and near-identical holidays
+    "IN": {"exchange": "NSE", "mic": "XBOM", "currency": "INR", "tz": "Asia/Kolkata", "index": "^NSEI"},
 }

@@ -15,7 +15,7 @@ export default function WatchlistClient({ initial }: { initial: W[] }) {
   return (
     <div className="space-y-4">
       <form onSubmit={add} className="flex gap-2 flex-wrap"><input value={sym} onChange={(e) => setSym(e.target.value)} placeholder="e.g. VOLV B or AAPL" required />
-        <select value={mk} onChange={(e) => setMk(e.target.value)}><option>SE</option><option>US</option></select><button>Add</button></form>
+        <select value={mk} onChange={(e) => setMk(e.target.value)}><option>SE</option><option>US</option><option>IN</option></select><button>Add</button></form>
       {err && <p className="text-red-400 text-sm">{err}</p>}
       <div className="panel overflow-x-auto"><table className="w-full text-sm"><tbody>
         {items.map((w) => <tr key={w.symbol}><td><a className="underline" href={`/company/${w.symbol}`}>{w.symbol}</a></td><td>{w.name}</td><td>{w.market}</td><td><button onClick={() => del(w.symbol)}>Remove</button></td></tr>)}

@@ -10,11 +10,13 @@ class ScanRules(BaseModel):
     five_day_drop_pct: float = 5.0
     unusual_volume_ratio: float = 2.0  # today's volume / 20d avg
     underperf_vs_index_pct: float = 2.0  # stock daily % minus index daily %
-    max_quote_age_minutes: dict[str, int] = {"US": 20, "SE": 20}
+    max_quote_age_minutes: dict[str, int] = {"US": 20, "SE": 20, "IN": 20}
     interval_minutes: int = 15
-    markets: list[str] = ["SE", "US"]
+    markets: list[str] = ["SE", "US", "IN"]
+    paper_stake: dict[str, float] = {"SE": 1000, "US": 100, "IN": 10000}  # amount invested per GREEN, in the market currency
     us_universe: list[str] = ["sp500"]  # sp500 | nasdaq100 (needs manual CSV) | watchlist
     se_universe: list[str] = ["omxs30", "largecap"]
+    in_universe: list[str] = ["nifty100"]
     max_candidates_per_scan: int = 25
     market_selloff_pct: float = 1.0  # index daily drop that counts as a broad selloff
     pullback_sma_tol_pct: float = 3.0  # strategy D: price within this % above/below SMA50

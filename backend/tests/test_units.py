@@ -160,3 +160,15 @@ def test_earnings_and_history_flags_and_levels():
     assert not {x.code for x in evaluate(f, 40, [], 30, -2, False, False, 1.0, days_to_earnings=9, pe_vs_hist=1.0)} & {"earnings_imminent", "expensive_vs_own_history"}
     lv = reference_levels(compute(make_bars(100), Quote("X", 90, "USD", NOW, NOW, "fake", 1), "Europe/Stockholm"))
     assert all(x["price"] > 90 for x in lv["upside"]) and all(x["price"] < 90 for x in lv["downside"]) and lv["downside"]
+
+
+def test_india_market():
+    from datetime import datetime, timezone
+    from app.market_data.calendars import session_fraction
+    from app.market_data.symbols import to_yahoo
+    from app.universe.loader import load
+    assert to_yahoo("reliance.ns", "IN") == "RELIANCE.NS" and to_yahoo("M&M", "IN") == "M&M.NS"
+    with pytest.raises(ValueError):
+        to_yahoo("bad!", "IN")
+    assert 0 < session_fraction("IN", datetime(2026, 11, 11, 6, 0, tzinfo=timezone.utc)) < 1  # 11:30 IST, Wednesday
+    assert len(load("nifty100")) > 90

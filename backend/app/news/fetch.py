@@ -28,7 +28,7 @@ class Article:
 
 def fetch_news(name: str, symbol: str, market: str, limit: int = 10, client: httpx.Client | None = None) -> list[Article]:
     q = quote_plus(f'"{name}" stock' if name else symbol)
-    hl = "sv&gl=SE&ceid=SE:sv" if market == "SE" else "en-US&gl=US&ceid=US:en"
+    hl = {"SE": "sv&gl=SE&ceid=SE:sv", "IN": "en-IN&gl=IN&ceid=IN:en"}.get(market, "en-US&gl=US&ceid=US:en")
     url = f"https://news.google.com/rss/search?q={q}&hl={hl}"
     err: Exception | None = None
     for attempt in range(3):  # retry transient network errors (e.g. TLS handshake timeouts)

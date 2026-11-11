@@ -140,7 +140,7 @@ def watchlist(s=Depends(db), _=Depends(auth)):
 @app.post("/api/watchlist", status_code=201)
 def watch_add(body: WatchIn, s=Depends(db), actor=Depends(auth)):
     if body.market not in MARKETS:
-        raise HTTPException(422, "market must be SE or US")
+        raise HTTPException(422, f"market must be one of {', '.join(MARKETS)}")
     try:
         sym = to_yahoo(body.symbol, body.market)
     except ValueError as e:
@@ -215,4 +215,4 @@ def performance(s=Depends(db), _=Depends(auth)):
 @app.get("/api/backtests")
 def backtests(s=Depends(db), _=Depends(auth)):
     return [{"id": b.id, "at": b.created_at.isoformat(), "kind": b.kind, "params": b.params, "result": b.result}
-            for b in s.scalars(select(BacktestResult).order_by(BacktestResult.created_at.desc()).limit(20))]
+            for b in s.scalars(select(BacktestResult).where(BacktestResult.kind == "historical").order_by(BacktestResult.created_at.desc()).limit(20))]

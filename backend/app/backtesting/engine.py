@@ -13,6 +13,7 @@ from collections import Counter
 from dataclasses import dataclass
 from datetime import datetime
 
+from app.backtesting.exits import RULES, simulate
 from app.core.config import ScanRules
 from app.market_data.base import Bar, Quote
 from app.scanner.features import compute
@@ -36,6 +37,8 @@ class Trade:
     ret: float  # net of costs, local currency unless fx supplied
     bench: float | None
     holding: int
+    rule: str = "fixed"  # 'fixed' = hold N days; else an exit rule from exits.RULES (holding = days actually held)
+    reason: str = ""  # signal | cap (exit rules only)
 
 
 def _index_at(bars: list[Bar], ts: datetime) -> int | None:
@@ -86,6 +89,18 @@ def generate_trades(universe: dict[str, list[Bar]], index_bars: list[Bar], tz: s
                     if ie is not None and ix is not None:
                         bench = index_bars[ix].close / index_bars[ie].open - 1
                     trades.append(Trade(sym, h.strategy, bars[e].ts, bars[x].ts, net, bench, hold))
+                for rule in RULES:
+                    x, why = simulate(bars, e + 1, entry, rule)
+                    if x is None:
+                        continue
+                    r = bars[x].close / entry - 1
+                    if fx:
+                        a, b = _index_at(fx, bars[e].ts), _index_at(fx, bars[x].ts)
+                        if a is not None and b is not None:
+                            r = (1 + r) * (fx[b].close / fx[a].open if fx[a].open else 1) - 1
+                    ie, ix = _index_at(index_bars, bars[e].ts), _index_at(index_bars, bars[x].ts)
+                    bench = index_bars[ix].close / index_bars[ie].open - 1 if ie is not None and ix is not None else None
+                    trades.append(Trade(sym, h.strategy, bars[e].ts, bars[x].ts, r - 2 * cost_bps / 1e4, bench, x - e, rule, why))
     return trades
 
 
@@ -98,15 +113,17 @@ def _max_drawdown(trades: list[Trade], slots: int = 10) -> float:
     return dd
 
 
-def summarize(trades: list[Trade], holding: int, slots: int = 10) -> dict:
-    ts = [t for t in trades if t.holding == holding]
+def summarize(trades: list[Trade], holding: int | None, slots: int = 10, rule: str = "fixed") -> dict:
+    ts = [t for t in trades if t.rule == rule and (holding is None or t.holding == holding)]
+    if holding is None and ts:
+        holding = round(statistics.fmean(t.holding for t in ts))  # exit rules: average days held
     if not ts:
         return {"holding_days": holding, "signals": 0}
     rets = [t.ret for t in ts]
     ex = [t.ret - t.bench for t in ts if t.bench is not None]
     sd = statistics.stdev(rets) if len(rets) > 1 else None
     top = Counter(t.symbol for t in ts).most_common(1)[0]
-    return {"holding_days": holding, "signals": len(ts), "win_rate": sum(r > 0 for r in rets) / len(rets),
+    return {"holding_days": holding, "signals": len(ts), "cap_exit_share": sum(t.reason == "cap" for t in ts) / len(ts) if rule != "fixed" else None, "win_rate": sum(r > 0 for r in rets) / len(rets),
             "mean_return": statistics.fmean(rets), "median_return": statistics.median(rets), "volatility": sd,
             "sharpe_per_trade_annualised": (statistics.fmean(rets) / sd * (252 / holding) ** 0.5) if sd else None,
             "mean_excess_vs_benchmark": statistics.fmean(ex) if ex else None,
@@ -124,4 +141,5 @@ def report(trades: list[Trade], oos_fraction: float = 0.4, holdings=HOLDINGS) ->
     by_strat = {s: [summarize([t for t in trades if t.strategy == s], h) for h in holdings] for s in {t.strategy for t in trades}}
     return {"split_date": cut.isoformat(), "in_sample": [summarize(ins, h) for h in holdings],
             "out_of_sample": [summarize(oos, h) for h in holdings], "by_strategy": by_strat,
-            "warnings": BASE_WARNINGS + ["Overlapping holding periods are counted as separate trades; trades are not independent."]}
+            "exit_rules": {r: {"label": RULES[r], "all": summarize(trades, None, rule=r), "out_of_sample": summarize(oos, None, rule=r)} for r in RULES},
+            "warnings": BASE_WARNINGS + ["Exit rules are checked on daily closes with a 60-day cap; entries whose data ends before an exit are dropped. Overlapping holding periods are counted as separate trades; trades are not independent."]}

@@ -156,3 +156,17 @@ def test_paper_evaluation_measures_outcomes_vs_benchmark(db):
     assert r["tracked_green"] == 1  # YELLOW is not tracked
     assert {"5", "20", "60"} <= set(r["by_holding"]) and "120" not in r["by_holding"]  # not enough elapsed days for 120
     assert "false_positive_rate" in r["by_holding"]["20"] and paper_report(db)["tracked_green"] == 1
+
+
+def test_exit_rules():
+    from datetime import datetime, timedelta
+    from app.backtesting.exits import simulate
+    from app.market_data.base import Bar
+    t0 = datetime(2024, 1, 1)
+    def mk(cs):
+        return [Bar(t0 + timedelta(days=i), c, c, c, c, 1) for i, c in enumerate(cs)]
+    b = mk([100] * 30 + [90, 91, 95, 101])  # dip then recovery above prior 20d high
+    assert simulate(b, 30, 90, "hi20") == (33, "signal")
+    assert simulate(mk([100] * 30 + [90, 80]), 30, 90, "trail8") == (31, "signal")  # 80 <= 90*0.92
+    assert simulate(mk([100] * 100), 30, 100, "trail8")[1] == "cap"
+    assert simulate(mk([100] * 40), 30, 100, "trail8") == (None, "open")
