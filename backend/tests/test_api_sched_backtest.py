@@ -138,6 +138,24 @@ def test_backtest_no_lookahead_costs_and_splits():
     assert s5["signals"] > 0 and 0 <= s5["win_rate"] <= 1 and s5["max_drawdown_sequenced"] <= 0
 
 
+def test_portfolio_caps_positions_and_matches_hand_calc():
+    from app.backtesting.engine import Trade, _curve_stats, portfolio
+    d = [datetime(2024, 1, 1, tzinfo=timezone.utc) + timedelta(days=i) for i in range(4)]
+    uni = {"A": [Bar(t, 100, 100, 100, c, 1) for t, c in zip(d, (100, 100, 110, 110))],
+           "B": [Bar(t, 100, 100, 100, 100, 1) for t in d]}
+    mk = lambda sym, ret, score: Trade(sym, "s", d[1], d[2], ret, None, 1, "hi20", "signal", 100.0, None, score)  # noqa: E731
+    r = portfolio([mk("A", 0.10, -5), mk("B", 0.0, -1)], uni, [], "hi20", slots=1)
+    # one slot: only the sharper drop (A) is taken with all capital; B is skipped
+    assert r["trades"] == 1 and r["skipped_signals"] == 1 and r["strategy"]["total_return"] == pytest.approx(0.10)
+    r2 = portfolio([mk("A", 0.10, -5), mk("B", 0.0, -1)], uni, [], "hi20", slots=2)
+    assert r2["trades"] == 2 and r2["strategy"]["total_return"] == pytest.approx(0.05)  # half the capital in each
+    assert r2["universe_equal_weight"]["total_return"] == pytest.approx(0.05)
+    st = _curve_stats([(d[0], 1.0), (d[1], 1.2), (d[2], 0.9), (d[3], 1.0)])
+    assert st["max_drawdown"] == pytest.approx(-0.25) and st["by_year"] == {"2024": pytest.approx(0.0)}
+    rep = report(generate_trades({"X": _series()}, _series(), "Europe/Stockholm", ScanRules()), universe={"X": _series()}, index_bars=_series())
+    assert rep["portfolio"]["hi20"]["all"]["trades"] > 0 and "mean_excess_vs_universe" in rep["exit_rules"]["hi20"]["all"]
+
+
 def test_backtest_empty_is_labelled():
     assert report([])["signals"] == 0
 

@@ -1,31 +1,48 @@
-import { api, pct } from "@/lib/api";
+import { api, pct, tone, when } from "@/lib/api";
+
+const P = (v: number | null | undefined) => <span className={tone(v)}>{v == null ? "–" : pct(v * 100)}</span>;
+const T = ({ head, children }: { head: string[]; children: React.ReactNode }) => (
+  <div className="overflow-x-auto -mx-4 px-4"><table className="text-sm w-full"><thead><tr>{head.map((h, i) => <th key={h} className={i ? "n" : "pl-0"}>{h}</th>)}</tr></thead><tbody>{children}</tbody></table></div>
+);
+const Empty = ({ n, children }: { n: number; children: React.ReactNode }) => <tr><td colSpan={n} className="mute pl-0 py-4">{children}</td></tr>;
+
 export default async function Page() {
   const [p, b] = await Promise.all([api("/api/performance"), api("/api/backtests")]);
+  const holds = Object.entries<any>(p?.by_holding ?? {}), open: any[] = p?.open_positions ?? [], strat = Object.entries<number>(p?.by_strategy_20d_mean_excess ?? {});
   return (
     <>
-      <h1 className="text-xl font-semibold">Performance</h1>
-      <section className="panel p-4 space-y-2"><h2 className="font-semibold">Paper trading (live GREEN opportunities, hypothetical)</h2>
-        <p className="text-sm mute">{p?.note}</p><p className="text-sm">Tracked GREEN opportunities: {p?.tracked_green ?? 0}</p>
-        <table className="text-sm w-full"><thead><tr className="mute"><th>Days</th><th>n</th><th>Win rate</th><th>Mean return</th><th>Mean excess vs index</th><th>False-positive rate</th></tr></thead><tbody>
-          {Object.entries<any>(p?.by_holding ?? {}).map(([h, x]) => <tr key={h}><td>{h}</td><td>{x.n}</td><td>{pct(x.win_rate * 100)}</td><td>{pct(x.mean_return * 100)}</td><td>{pct(x.mean_excess * 100)}</td><td>{pct(x.false_positive_rate * 100)}</td></tr>)}</tbody></table>
-        <h3 className="font-semibold pt-2">Open positions (stake per GREEN: SE 1000 SEK, US 100 USD, IN 10000 INR)</h3>
-        {(p?.open_positions ?? []).length === 0 ? <p className="text-sm mute">No open positions.</p> :
-        <table className="text-sm w-full"><thead><tr className="mute"><th>Symbol</th><th>Entry</th><th>Now</th><th>P/L</th><th>Day</th><th>Sell at ≥ 20d high</th><th>Sell at ≥ 50d avg</th><th>Stop (8% trail)</th></tr></thead><tbody>
-          {p.open_positions.map((r: any) => <tr key={r.symbol}><td>{r.symbol}</td><td>{r.position.entry.toFixed(2)}</td><td>{r.position.last.toFixed(2)}</td>
-            <td>{r.position.unrealized.toFixed(0)} {r.currency} ({pct(r.position.unrealized_pct * 100)})</td><td>{r.position.days_held}/60</td>
-            <td>{r.position.targets.hi20.toFixed(2)}</td><td>{r.position.targets.ma50.toFixed(2)}</td><td>{r.position.targets.trail8.toFixed(2)}</td></tr>)}</tbody></table>}
-        <h3 className="font-semibold pt-2">Exit rules (max hold 60 days; vs fixed holds above)</h3>
-        <table className="text-sm w-full"><thead><tr className="mute"><th>Rule</th><th>Closed</th><th>Open</th><th>Win rate</th><th>Mean return</th><th>Mean excess</th><th>Avg days</th><th>P/L (closed)</th><th>Hit 60d cap</th></tr></thead><tbody>
-          {Object.entries<any>(p?.by_exit_rule ?? {}).map(([k, x]) => <tr key={k}><td>{x.label}</td><td>{x.n}</td><td>{x.still_open}</td><td>{x.n ? pct(x.win_rate * 100) : "–"}</td><td>{x.n ? pct(x.mean_return * 100) : "–"}</td><td>{x.n ? pct(x.mean_excess * 100) : "–"}</td><td>{x.n ? x.mean_days.toFixed(0) : "–"}</td><td>{x.n ? x.total_pnl.toFixed(0) : "–"}</td><td>{x.n ? pct(x.cap_exit_share * 100) : "–"}</td></tr>)}</tbody></table>
-        <h3 className="font-semibold pt-2">Strategy (20-day mean excess return)</h3>
-        <ul className="text-sm">{Object.entries<number>(p?.by_strategy_20d_mean_excess ?? {}).map(([k, v]) => <li key={k}>{k}: {pct(v * 100)}</li>)}</ul></section>
-      <section className="panel p-4 space-y-2"><h2 className="font-semibold">Historical backtests</h2>
+      <h1>Performance</h1>
+      <section className="panel p-4 space-y-5">
+        <div><h2>Paper trading</h2><p className="text-sm mute mt-1 max-w-[75ch]">Live GREEN opportunities, tracked hypothetically. {p?.note}</p><p className="text-sm mt-2">Tracked GREEN opportunities: <b>{p?.tracked_green ?? 0}</b></p></div>
+        <div><h3 className="mb-1">Open positions <span className="mute font-normal">· stake per GREEN: SE 1000 SEK, US 100 USD, IN 10000 INR</span></h3>
+          <T head={["Symbol", "Entry", "Now", "P/L", "Day", "Sell at ≥ 20d high", "Sell at ≥ 50d avg", "Stop (8% trail)"]}>
+            {open.map((r) => <tr key={r.symbol}><td className="pl-0"><a className="underline font-medium" href={`/company/${r.symbol}`}>{r.symbol}</a></td><td className="n">{r.position.entry.toFixed(2)}</td><td className="n">{r.position.last.toFixed(2)}</td>
+              <td className={`n ${tone(r.position.unrealized_pct)}`}>{r.position.unrealized.toFixed(0)} {r.currency} ({pct(r.position.unrealized_pct * 100)})</td><td className="n mute">{r.position.days_held}/60</td>
+              <td className="n">{r.position.targets.hi20.toFixed(2)}</td><td className="n">{r.position.targets.ma50.toFixed(2)}</td><td className="n">{r.position.targets.trail8.toFixed(2)}</td></tr>)}
+            {!open.length && <Empty n={8}>No open positions.</Empty>}</T></div>
+        <div><h3 className="mb-1">Exit rules <span className="mute font-normal">· max hold 60 days</span></h3>
+          <T head={["Rule", "Closed", "Open", "Win rate", "Mean return", "Mean excess", "Avg days", "P/L (closed)", "Hit 60d cap"]}>
+            {Object.entries<any>(p?.by_exit_rule ?? {}).map(([k, x]) => <tr key={k}><td className="pl-0">{x.label}</td><td className="n">{x.n}</td><td className="n">{x.still_open}</td><td className="n">{x.n ? `${(x.win_rate * 100).toFixed(0)}%` : "–"}</td><td className="n">{P(x.n ? x.mean_return : null)}</td><td className="n">{P(x.n ? x.mean_excess : null)}</td><td className="n">{x.n ? x.mean_days.toFixed(0) : "–"}</td><td className={`n ${tone(x.n ? x.total_pnl : null)}`}>{x.n ? x.total_pnl.toFixed(0) : "–"}</td><td className="n">{x.n ? `${(x.cap_exit_share * 100).toFixed(0)}%` : "–"}</td></tr>)}</T></div>
+        <div><h3 className="mb-1">Fixed holding periods</h3>
+          <T head={["Days", "n", "Win rate", "Mean return", "Mean excess vs index", "False-positive rate"]}>
+            {holds.map(([h, x]) => <tr key={h}><td className="pl-0">{h}</td><td className="n">{x.n}</td><td className="n">{(x.win_rate * 100).toFixed(0)}%</td><td className="n">{P(x.mean_return)}</td><td className="n">{P(x.mean_excess)}</td><td className="n">{(x.false_positive_rate * 100).toFixed(0)}%</td></tr>)}
+            {!holds.length && <Empty n={6}>No position has been held for 5 trading days yet.</Empty>}</T></div>
+        <div><h3 className="mb-1">Strategy <span className="mute font-normal">· 20-day mean excess return</span></h3>
+          {strat.length ? <ul className="text-sm">{strat.map(([k, v]) => <li key={k} className="flex justify-between max-w-sm py-1"><span>{k.replaceAll("_", " ")}</span>{P(v)}</li>)}</ul> : <p className="text-sm mute">Available once a position has been held for 20 trading days.</p>}</div>
+      </section>
+      <section className="panel p-4 space-y-2"><h2>Historical backtests</h2>
         {(b ?? []).length === 0 && <p className="text-sm mute">None stored. Run: <code>docker compose run --rm scheduler backtest SE</code></p>}
-        {(b ?? []).map((r: any) => <details key={r.id} className="text-sm"><summary>{r.at} · {r.kind} · {r.params?.market}</summary>
-          <ul className="list-disc pl-5 text-amber-400">{(r.result.warnings ?? []).map((w: string) => <li key={w}>{w}</li>)}</ul>
-          {r.result.exit_rules && <table className="text-sm w-full my-2"><thead><tr className="mute"><th>Exit rule</th><th>Trades</th><th>Win rate</th><th>Mean return</th><th>vs index</th><th>Avg days</th><th>Hit 60d cap</th><th>OOS mean return</th></tr></thead><tbody>
-            {Object.values<any>(r.result.exit_rules).map((x: any) => <tr key={x.label}><td>{x.label}</td><td>{x.all.signals}</td><td>{x.all.signals ? pct(x.all.win_rate * 100) : "–"}</td><td>{x.all.signals ? pct(x.all.mean_return * 100) : "–"}</td><td>{x.all.mean_excess_vs_benchmark != null ? pct(x.all.mean_excess_vs_benchmark * 100) : "–"}</td><td>{x.all.holding_days ?? "–"}</td><td>{x.all.signals ? pct(x.all.cap_exit_share * 100) : "–"}</td><td>{x.out_of_sample.signals ? pct(x.out_of_sample.mean_return * 100) : "–"}</td></tr>)}</tbody></table>}
-          <pre className="overflow-x-auto text-xs">{JSON.stringify({ in_sample: r.result.in_sample, out_of_sample: r.result.out_of_sample }, null, 1)}</pre></details>)}</section>
+        {(b ?? []).map((r: any, i: number) => <details key={r.id} className="text-sm" open={i === 0}><summary><span className="font-medium">{r.params?.market}</span> <span className="mute" suppressHydrationWarning>· {when(r.at)} · {r.params?.symbols} symbols</span></summary>
+          <div className="space-y-4 pb-3">
+          {r.result.portfolio && <div><h3 className="mb-1">One account, max {r.params?.slots ?? 10} positions, costs included</h3><p className="mute mb-1">Compare each rule with simply holding the same stocks.</p>
+            <T head={["Rule", "Period", "Trades", "Invested", "Return / yr", "Worst drop", "Hold universe / yr", "Its worst drop", "Index / yr"]}>
+              {Object.values<any>(r.result.portfolio).flatMap((x: any) => [["All", x.all], ["Out-of-sample", x.out_of_sample]].filter(([, v]: any) => v?.trades).map(([k, v]: any) => <tr key={x.label + k}><td className="pl-0">{x.label}</td><td className="n mute">{k}</td><td className="n">{v.trades}</td><td className="n">{(v.avg_exposure * 100).toFixed(0)}%</td><td className="n">{P(v.strategy.cagr)}</td><td className="n">{P(v.strategy.max_drawdown)}</td><td className="n">{P(v.universe_equal_weight.cagr)}</td><td className="n">{P(v.universe_equal_weight.max_drawdown)}</td><td className="n">{P(v.index_price_only?.cagr)}</td></tr>))}</T></div>}
+          {r.result.exit_rules && <div><h3 className="mb-1">Per trade, unlimited capital</h3>
+            <T head={["Exit rule", "Trades", "Win rate", "Mean return", "vs index", "vs universe", "Avg days", "Hit 60d cap", "OOS mean return"]}>
+              {Object.values<any>(r.result.exit_rules).map((x: any) => <tr key={x.label}><td className="pl-0">{x.label}</td><td className="n">{x.all.signals}</td><td className="n">{x.all.signals ? `${(x.all.win_rate * 100).toFixed(0)}%` : "–"}</td><td className="n">{P(x.all.mean_return)}</td><td className="n">{P(x.all.mean_excess_vs_benchmark)}</td><td className="n">{P(x.all.mean_excess_vs_universe)}</td><td className="n">{x.all.holding_days ?? "–"}</td><td className="n">{x.all.signals ? `${(x.all.cap_exit_share * 100).toFixed(0)}%` : "–"}</td><td className="n">{P(x.out_of_sample.mean_return)}</td></tr>)}</T></div>}
+          <details><summary className="mute">Method caveats ({(r.result.warnings ?? []).length})</summary><ul className="list-disc pl-5 warn space-y-1 max-w-[75ch]">{(r.result.warnings ?? []).map((w: string) => <li key={w}>{w}</li>)}</ul></details>
+          <details><summary className="mute">Raw fixed-hold results</summary><pre className="overflow-x-auto text-xs">{JSON.stringify({ in_sample: r.result.in_sample, out_of_sample: r.result.out_of_sample }, null, 1)}</pre></details>
+          </div></details>)}</section>
     </>
   );
 }

@@ -1,11 +1,79 @@
 @import "tailwindcss";
-:root { --bg:#0f1216; --panel:#171b21; --line:#262c35; --fg:#e6e9ee; --mute:#8b94a3; }
-@media (prefers-color-scheme: light) { :root { --bg:#f6f7f9; --panel:#fff; --line:#e1e4ea; --fg:#16191f; --mute:#5f6b7a; } }
-body { background: var(--bg); color: var(--fg); font-family: ui-sans-serif, system-ui, sans-serif; }
-.panel { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; }
-.mute { color: var(--mute); }
-th, td { padding: .5rem .75rem; text-align: left; white-space: nowrap; }
-tr + tr { border-top: 1px solid var(--line); }
-input, select { background: var(--bg); border: 1px solid var(--line); border-radius: 6px; padding: .4rem .6rem; }
-button { border: 1px solid var(--line); border-radius: 6px; padding: .4rem .8rem; }
-button:hover { background: var(--line); }
+
+:root {
+  color-scheme: dark;
+  --bg: #0d1014; --panel: #151920; --raise: #1c212b; --line: #262c37; --fg: #e7eaf0; --mute: #8f99a8;
+  --accent: #7cb7ff; --on-accent: #08111f; --up: #3ecf8e; --down: #ff7070; --warn: #f2b84b;
+  --ease: cubic-bezier(.16, 1, .3, 1);
+}
+@media (prefers-color-scheme: light) {
+  :root { color-scheme: light; --bg: #f4f5f7; --panel: #fff; --raise: #eef1f5; --line: #dde2e9; --fg: #14171c; --mute: #5a6675;
+    --accent: #1a5fd0; --on-accent: #fff; --up: #0f7b4f; --down: #c62f2f; --warn: #8a5a00; }
+}
+
+@layer base {
+  * { scrollbar-width: thin; scrollbar-color: var(--line) transparent; }
+  ::selection { background: color-mix(in oklab, var(--accent) 32%, transparent); }
+  :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 4px; }
+  body { background: var(--bg); color: var(--fg); font-family: var(--font-sans), ui-sans-serif, system-ui, sans-serif; caret-color: var(--accent);
+    -webkit-font-smoothing: antialiased; font-feature-settings: "tnum", "zero"; }
+  h1 { font-size: 1.5rem; line-height: 1.2; font-weight: 600; letter-spacing: -.02em; text-wrap: balance; }
+  h2 { font-size: 1rem; font-weight: 600; letter-spacing: -.01em; }
+  h3 { font-size: .875rem; font-weight: 600; }
+  p { text-wrap: pretty; }
+  main a { text-decoration-thickness: 1px; text-underline-offset: 3px; text-decoration-color: color-mix(in oklab, currentColor 35%, transparent);
+    transition: color .15s, text-decoration-color .15s; }
+  main a:hover { color: var(--accent); text-decoration-color: currentColor; }
+
+  table { border-collapse: collapse; }
+  th, td { padding: .55rem .75rem; text-align: left; white-space: nowrap; }
+  th { font-size: .75rem; font-weight: 500; color: var(--mute); }
+  thead tr { border-bottom: 1px solid var(--line); }
+  tbody tr + tr { border-top: 1px solid var(--line); }
+  tbody tr { transition: background-color .12s; }
+  tbody tr:hover { background: var(--raise); }
+  th.n, td.n { text-align: right; }
+  .dense th, .dense td { padding-inline: .5rem; }
+  .dense :is(th, td):first-child { padding-left: .75rem; } .dense :is(th, td):last-child { padding-right: .75rem; }
+
+  input, select { background: var(--bg); border: 1px solid var(--line); border-radius: 7px; padding: .45rem .65rem; min-height: 2.25rem;
+    transition: border-color .15s, box-shadow .15s; }
+  input::placeholder { color: var(--mute); }
+  input:hover, select:hover { border-color: color-mix(in oklab, var(--mute) 60%, var(--line)); }
+  input:focus-visible, select:focus-visible { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px color-mix(in oklab, var(--accent) 25%, transparent); }
+  button { border: 1px solid var(--line); border-radius: 7px; padding: .45rem .85rem; min-height: 2.25rem; font-weight: 500; cursor: pointer;
+    transition: background-color .15s, border-color .15s, color .15s, transform .15s var(--ease); }
+  button:hover { background: var(--raise); }
+  button:active { transform: scale(.97); }
+  button:disabled { opacity: .55; cursor: default; transform: none; }
+  summary { cursor: pointer; padding: .4rem 0; border-radius: 4px; transition: color .15s; }
+  summary:hover { color: var(--accent); }
+  pre { background: var(--bg); border: 1px solid var(--line); border-radius: 8px; padding: .75rem; }
+}
+
+@layer components {
+  .panel { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; }
+  .mute { color: var(--mute); }
+  .up { color: var(--up); } .down { color: var(--down); } .warn { color: var(--warn); }
+  .primary { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
+  .primary:hover { background: color-mix(in oklab, var(--accent) 88%, var(--fg)); }
+  .ghost { border-color: transparent; min-height: 0; padding: 0; background: none; color: inherit; font: inherit; }
+  .ghost:hover { background: none; color: var(--fg); }
+  .badge { display: inline-flex; align-items: center; gap: .35rem; padding: .1rem .5rem; border-radius: 999px; font-size: .75rem; font-weight: 500;
+    color: var(--c); background: color-mix(in oklab, var(--c) 15%, transparent); }
+  .badge::before, .dot { content: ""; display: inline-block; width: .4rem; height: .4rem; border-radius: 50%; background: var(--c, var(--mute)); }
+  .seg { display: inline-flex; border: 1px solid var(--line); border-radius: 8px; padding: 2px; gap: 2px; background: var(--bg); }
+  .seg button { border: 0; min-height: 1.75rem; padding: .15rem .65rem; font-size: .8125rem; color: var(--mute); }
+  .seg button[aria-pressed="true"] { background: var(--raise); color: var(--fg); }
+
+  /* one authored moment: content settles in when a page arrives */
+  .page > * { animation: rise .5s var(--ease) both; }
+  .page > :nth-child(2) { animation-delay: 40ms; } .page > :nth-child(3) { animation-delay: 80ms; }
+  .page > :nth-child(4) { animation-delay: 120ms; } .page > :nth-child(n+5) { animation-delay: 160ms; }
+  .skel { border-radius: 12px; background: linear-gradient(100deg, var(--panel) 40%, var(--raise) 50%, var(--panel) 60%) 0 0 / 300% 100%; animation: shimmer 1.4s linear infinite; }
+  .page > .skel-root { animation: fade .3s .15s both; }  /* delayed so fast loads never flash a skeleton */
+}
+@keyframes rise { from { opacity: 0; transform: translateY(8px); } }
+@keyframes fade { from { opacity: 0; } }
+@keyframes shimmer { to { background-position: -150% 0; } }
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } }

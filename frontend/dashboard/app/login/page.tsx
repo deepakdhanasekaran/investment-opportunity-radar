@@ -25,13 +25,13 @@ export default async function Login({ searchParams }: { searchParams: Promise<{ 
   const { e } = await searchParams;
   const msg = { bad: "Wrong password.", wait: "Too many attempts. Wait a minute.", config: "Server not configured (DASHBOARD_PASSWORD / DASHBOARD_SESSION_SECRET)." }[e ?? ""];
   return (
-    <main className="min-h-screen grid place-items-center p-4">
+    <div className="min-h-[70vh] grid place-items-center">
       <form action={login} className="panel p-6 w-full max-w-sm space-y-4">
-        <h1 className="text-lg font-semibold">Opportunity Radar</h1>
-        <input name="password" type="password" autoComplete="current-password" placeholder="Password" className="w-full" required />
-        {msg && <p className="text-sm text-red-400">{msg}</p>}
-        <button className="w-full">Sign in</button>
+        <div><h1>Opportunity Radar</h1><p className="text-sm mute mt-1">Sign in to see the scanner.</p></div>
+        <input name="password" type="password" autoComplete="current-password" placeholder="Password" aria-label="Password" className="w-full" required autoFocus />
+        {msg && <p className="text-sm down" role="alert">{msg}</p>}
+        <button className="primary w-full">Sign in</button>
       </form>
-    </main>
+    </div>
   );
 }
