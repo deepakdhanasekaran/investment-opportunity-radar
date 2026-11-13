@@ -61,7 +61,7 @@ def evaluate(s: Session, provider, now: datetime | None = None) -> dict:
                    "unrealized_pct": last / entry_px - 1, "unrealized": stake * (last / entry_px - 1),
                    "targets": {"hi20": max(x.close for x in b[-20:]), "ma50": sum(x.close for x in b[-50:]) / len(b[-50:]),
                                "trail8": max(entry_px, *(x.close for x in b[s0:])) * 0.92}}
-        rows.append({"position": pos, "currency": sec.currency, "stake": stake, "symbol": sec.symbol, "at": d0.isoformat(), "strategies": [x["name"] for x in a.report["facts"]["strategies"]], "outcomes": out, "exits": ex})
+        rows.append({"position": pos, "currency": sec.currency, "stake": stake, "symbol": sec.symbol, "name": sec.name, "at": d0.isoformat(), "strategies": [x["name"] for x in a.report["facts"]["strategies"]], "outcomes": out, "exits": ex})
     summary = {}
     for h in HOLDS:
         xs = [r["outcomes"][str(h)] for r in rows if str(h) in r["outcomes"]]

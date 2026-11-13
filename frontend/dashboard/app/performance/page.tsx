@@ -15,9 +15,9 @@ export default async function Page() {
       <section className="panel p-4 space-y-5">
         <div><h2>Paper trading</h2><p className="text-sm mute mt-1 max-w-[75ch]">Live GREEN opportunities, tracked hypothetically. {p?.note}</p><p className="text-sm mt-2">Tracked GREEN opportunities: <b>{p?.tracked_green ?? 0}</b></p></div>
         <div><h3 className="mb-1">Open positions <span className="mute font-normal">· stake per GREEN: SE 1000 SEK, US 100 USD, IN 10000 INR</span></h3>
-          <T head={["Symbol", "Entry", "Now", "P/L", "Day", "Sell at ≥ 20d high", "Sell at ≥ 50d avg", "Stop (8% trail)"]}>
-            {open.map((r) => <tr key={r.symbol}><td className="pl-0"><a className="underline font-medium" href={`/company/${r.symbol}`}>{r.symbol}</a></td><td className="n">{r.position.entry.toFixed(2)}</td><td className="n">{r.position.last.toFixed(2)}</td>
-              <td className={`n ${tone(r.position.unrealized_pct)}`}>{r.position.unrealized.toFixed(0)} {r.currency} ({pct(r.position.unrealized_pct * 100)})</td><td className="n mute">{r.position.days_held}/60</td>
+          <T head={["Symbol", "Entry", "Now", "P/L", "Added", "Sell at ≥ 20d high", "Sell at ≥ 50d avg", "Stop (8% trail)"]}>
+            {open.map((r) => <tr key={r.symbol}><td className="pl-0"><a className="underline font-medium" href={`/company/${r.symbol}`}>{r.symbol}</a>{r.name && <div className="mute text-xs">{r.name}</div>}</td><td className="n">{r.position.entry.toFixed(2)}</td><td className="n">{r.position.last.toFixed(2)}</td>
+              <td className={`n ${tone(r.position.unrealized_pct)}`}>{r.position.unrealized.toFixed(0)} {r.currency} ({pct(r.position.unrealized_pct * 100)})</td><td className="n mute whitespace-nowrap" title={`Trading day ${r.position.days_held} of 60`}>{new Date(r.at).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric", timeZone: "UTC" })}</td>
               <td className="n">{r.position.targets.hi20.toFixed(2)}</td><td className="n">{r.position.targets.ma50.toFixed(2)}</td><td className="n">{r.position.targets.trail8.toFixed(2)}</td></tr>)}
             {!open.length && <Empty n={8}>No open positions.</Empty>}</T></div>
         <div><h3 className="mb-1">Exit rules <span className="mute font-normal">· max hold 60 days</span></h3>
