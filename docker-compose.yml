@@ -8,11 +8,12 @@ x-backend: &backend
   depends_on:
     db: {condition: service_healthy}
   stop_grace_period: 60s   # let a running scan finish
-  logging: {driver: json-file, options: {max-size: "10m", max-file: "5"}}
+  logging: &logging {driver: json-file, options: {max-size: "10m", max-file: "5"}}
 
 services:
   db:
     image: postgres:16-alpine
+    logging: *logging
     restart: unless-stopped
     environment:
       POSTGRES_USER: radar
@@ -57,6 +58,7 @@ services:
   dashboard:
     profiles: [dashboard]
     build: ./frontend/dashboard
+    logging: *logging
     restart: unless-stopped
     env_file: .env
     environment:
@@ -71,6 +73,7 @@ services:
   cloudflared:
     profiles: [tunnel]
     image: cloudflare/cloudflared:latest
+    logging: *logging
     restart: unless-stopped
     command: tunnel --no-autoupdate run
     environment:
