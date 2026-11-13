@@ -1,7 +1,7 @@
 import "./globals.css";
-import { IBM_Plex_Sans } from "next/font/google";
+import localFont from "next/font/local";
 import Nav from "@/components/Nav";
-const sans = IBM_Plex_Sans({ subsets: ["latin"], weight: ["400", "500", "600"], variable: "--font-sans", display: "swap" });
+const sans = localFont({ src: "./plex-sans.woff2", weight: "100 700", variable: "--font-sans", display: "swap" });
 export const metadata = { title: "Opportunity Radar", robots: { index: false, follow: false } };
 export default function Root({ children }: { children: React.ReactNode }) {
   return (
